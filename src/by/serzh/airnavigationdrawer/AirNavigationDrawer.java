@@ -219,21 +219,25 @@ public class AirNavigationDrawer extends ViewGroup {
             }
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP: {
-            	if(isTouchMove) {
-					velocityTracker.computeCurrentVelocity(1000, maximumVelocity);
-					int initialVelocity = (int) velocityTracker.getXVelocity(ev.getPointerId(ev.getActionIndex()));
-	
-					if (Math.abs(initialVelocity) > minimumFlingVelocity 
-							&& Math.abs(initialVelocity) < maximumFlingVelocity) {
-						if(initialVelocity < 0) {
-							closeMenu();
+            	if(velocityTracker != null) {
+	            	if(isTouchMove) {
+						velocityTracker.computeCurrentVelocity(1000, maximumVelocity);
+						int initialVelocity = (int) velocityTracker.getXVelocity(ev.getPointerId(ev.getActionIndex()));
+		
+						if (Math.abs(initialVelocity) > minimumFlingVelocity 
+								&& Math.abs(initialVelocity) < maximumFlingVelocity) {
+							if(initialVelocity < 0) {
+								closeMenu();
+							} else {
+								showMenu();
+							}
 						} else {
-							showMenu();
+							onTouchFinished();
 						}
-					} else {
-						onTouchFinished();
-					}
-            	} else if(isMenuShown()) {
+	            	} else if(isMenuShown()) {
+	            		animateTo(menuWidth);
+	            	}
+            	} else {
             		animateTo(menuWidth);
             	}
             	isTouchMove = false;

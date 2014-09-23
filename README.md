@@ -3,7 +3,7 @@ AirNavigationDrawer
 ----
 
 
-A view that implements behaivior similar to [PHAirViewController](https://github.com/taphuochai/PHAirViewController)
+A view that implements behavior similar to [PHAirViewController](https://github.com/taphuochai/PHAirViewController)
 
 It looks like this:
 
