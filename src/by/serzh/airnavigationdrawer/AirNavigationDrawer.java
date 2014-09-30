@@ -1,6 +1,9 @@
 package by.serzh.airnavigationdrawer;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
@@ -22,14 +25,13 @@ public class AirNavigationDrawer extends ViewGroup {
 	private static final int LEFT_TOUCH_ZONE_WIDTH_DP = 20;
 	private static int LEFT_TOUCH_ZONE_WIDTH;
 	
-	private static final int MENU_RIGHT_MARGIN_DP = 80;
+	private static final int MENU_RIGHT_MARGIN_DP = 50;
 	private static int MENU_RIGHT_MARGIN;
 	
 	private static final int INTERCEPT_DELTA_DP = 2;
 	private static int INTERCEPT_DELTA;
 	
 	private static final float CONTENT_ROTATION_ANGLE = 15f;
-	private static final float MENU_ROTATION_ANGLE = 10f;
 	
 	private int visibleHeight;
 	private int visibleWidth;
@@ -61,6 +63,8 @@ public class AirNavigationDrawer extends ViewGroup {
     
     private OnMenuShownListener onMenuShownListener;
     private OnMenuClosedListener onMenuClosedListener;
+    
+    private List<OpeningPercentListener> openingPercentListeners = new ArrayList<OpeningPercentListener>();
     
 	public AirNavigationDrawer(Context context) {
 		this(context, null);
@@ -134,7 +138,6 @@ public class AirNavigationDrawer extends ViewGroup {
 		getChildAt(0).layout(0, 0, menuWidth, menuHeight);
 		getChildAt(1).layout(menuWidth, 0, contentWidth + menuWidth, contentHeight);
 	}
-	
 	
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
@@ -213,6 +216,7 @@ public class AirNavigationDrawer extends ViewGroup {
             	}
             	updateContentSubstitutionViewAngle();
             	updateMenuSubstitutionViewAngle();
+            	notifyListeners();
                 previousX = x;
                 previousY = y;
                 break;
@@ -290,6 +294,7 @@ public class AirNavigationDrawer extends ViewGroup {
 				public void onAnimationUpdate(ValueAnimator animation) {
 					updateContentSubstitutionViewAngle();
 					updateMenuSubstitutionViewAngle();
+					notifyListeners();
 				}
 			});
 			animator.addListener(new Animator.AnimatorListener() {
@@ -306,6 +311,7 @@ public class AirNavigationDrawer extends ViewGroup {
 				public void onAnimationEnd(Animator animation) {
 					updateContentSubstitutionViewAngle();
 					updateMenuSubstitutionViewAngle();
+					notifyListeners();
 			    	onTransitionFinished();
 					isAnimationWorking = false;
 				}
@@ -321,13 +327,14 @@ public class AirNavigationDrawer extends ViewGroup {
 	
 	private void updateContentSubstitutionViewAngle() {
 		float percent = getOpeningPercent();
+		contentContainer.setPivotX(0);
+		contentContainer.setPivotY(contentContainer.getHeight() / 2);
 		contentContainer.setRotationY(-CONTENT_ROTATION_ANGLE * percent);
+		contentContainer.setScaleX(1 - 0.4f * percent);
+		contentContainer.setScaleY(1 - 0.4f * percent);
 	}
 	
 	private void updateMenuSubstitutionViewAngle() {
-		float percent = getOpeningPercent();
-		menuContainer.setRotationY(MENU_ROTATION_ANGLE * (1 - percent));
-		menuContainer.setAlpha(percent);
 	}
 	
 	private float getOpeningPercent() {
@@ -396,5 +403,20 @@ public class AirNavigationDrawer extends ViewGroup {
 	
 	public void setLeftEdgeSizePx(int pxs) {
 		LEFT_TOUCH_ZONE_WIDTH = pxs;
+	}
+	
+	public void addOpeningPercentListener(OpeningPercentListener listener) {
+		this.openingPercentListeners.add(listener);
+	}
+	
+	public void removeOpeningPercentListener(OpeningPercentListener listener) {
+		this.openingPercentListeners.remove(listener);
+	}
+	
+	private void notifyListeners() {
+		float percent = getOpeningPercent();
+		for(OpeningPercentListener listener : openingPercentListeners) {
+			listener.onOpeningPercentUpdate(1 - percent);
+		}
 	}
 }
