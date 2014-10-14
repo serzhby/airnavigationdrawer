@@ -1,6 +1,5 @@
 package by.serzh.airnavigationdrawer;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +11,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
+import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -31,7 +31,8 @@ public class AirNavigationDrawer extends ViewGroup {
 	private static final int INTERCEPT_DELTA_DP = 2;
 	private static int INTERCEPT_DELTA;
 	
-	private static final float CONTENT_ROTATION_ANGLE = 15f;
+	//private static final float CONTENT_ROTATION_ANGLE = 15f;
+	private int topPaddingHeight = 0;
 	
 	private int visibleHeight;
 	private int visibleWidth;
@@ -65,6 +66,9 @@ public class AirNavigationDrawer extends ViewGroup {
     private OnMenuClosedListener onMenuClosedListener;
     
     private List<OpeningPercentListener> openingPercentListeners = new ArrayList<OpeningPercentListener>();
+
+	private FrameLayout contentRootContainer;
+	private ContentSubstitutionView contentSubstitutionView;
     
 	public AirNavigationDrawer(Context context) {
 		this(context, null);
@@ -85,7 +89,17 @@ public class AirNavigationDrawer extends ViewGroup {
 		createContentContainer(context);
 
 		addView(menuContainer);
-		addView(contentContainer);
+		
+		contentRootContainer = new FrameLayout(getContext());
+		contentRootContainer.addView(contentContainer);
+		
+		contentSubstitutionView = new ContentSubstitutionView(context, this);
+		contentSubstitutionView.setVisibility(View.GONE);
+		
+		contentRootContainer.addView(contentSubstitutionView);
+		addView(contentRootContainer);
+		
+		//addView(contentContainer);
 		initializeVelocityConstants(context);
 	}
 
@@ -146,15 +160,14 @@ public class AirNavigationDrawer extends ViewGroup {
 	        final int action = ev.getAction();
 	        int y = (int) ev.getY();
 	        int x = (int) ev.getX();
-	        
-	
+
 	        switch (action & MotionEvent.ACTION_MASK) {
 				case MotionEvent.ACTION_DOWN: {
 	            	initOrResetVelocityTracker();
 			        previousX = x;
 			        previousY = y;
 			        if((isMenuShown() && x > menuWidth)
-			        		|| (touchMode == TouchMode.MARGIN && x > 0 && x < LEFT_TOUCH_ZONE_WIDTH)) {
+			        		|| (touchMode == TouchMode.MARGIN && x > 0 && x < LEFT_TOUCH_ZONE_WIDTH && y > topPaddingHeight)) {
 			        	result = true;
 			        }
 			        break;
@@ -227,7 +240,7 @@ public class AirNavigationDrawer extends ViewGroup {
 	            	if(isTouchMove) {
 						velocityTracker.computeCurrentVelocity(1000, maximumVelocity);
 						int initialVelocity = (int) velocityTracker.getXVelocity(ev.getPointerId(ev.getActionIndex()));
-		
+
 						if (Math.abs(initialVelocity) > minimumFlingVelocity 
 								&& Math.abs(initialVelocity) < maximumFlingVelocity) {
 							if(initialVelocity < 0) {
@@ -327,11 +340,21 @@ public class AirNavigationDrawer extends ViewGroup {
 	
 	private void updateContentSubstitutionViewAngle() {
 		float percent = getOpeningPercent();
-		contentContainer.setPivotX(0);
-		contentContainer.setPivotY(contentContainer.getHeight() / 2);
-		contentContainer.setRotationY(-CONTENT_ROTATION_ANGLE * percent);
-		contentContainer.setScaleX(1 - 0.4f * percent);
-		contentContainer.setScaleY(1 - 0.4f * percent);
+		contentSubstitutionView.setOpeningPercent(percent);
+		if(percent == 0) {
+			contentSubstitutionView.setVisibility(View.INVISIBLE);
+			contentContainer.setVisibility(View.VISIBLE);
+			contentSubstitutionView.recycle();
+		} else {
+			contentSubstitutionView.setVisibility(View.VISIBLE);
+			contentContainer.setVisibility(View.INVISIBLE);
+			contentSubstitutionView.setView(contentContainer);
+		}
+//		contentContainer.setPivotX(0);
+//		contentContainer.setPivotY(contentContainer.getHeight() / 2);
+//		contentContainer.setRotationY(-CONTENT_ROTATION_ANGLE * percent);
+//		contentContainer.setScaleX(1 - 0.4f * percent);
+//		contentContainer.setScaleY(1 - 0.4f * percent);
 	}
 	
 	private void updateMenuSubstitutionViewAngle() {
@@ -418,5 +441,19 @@ public class AirNavigationDrawer extends ViewGroup {
 		for(OpeningPercentListener listener : openingPercentListeners) {
 			listener.onOpeningPercentUpdate(1 - percent);
 		}
+	}
+	
+	public void setTopPaddingHeight(int topPaddingHeight) {
+		this.topPaddingHeight = topPaddingHeight;
+	}
+
+	void measureContentView(View view) {
+		view.measure(MeasureSpec.makeMeasureSpec(contentWidth, MeasureSpec.EXACTLY), 
+				MeasureSpec.makeMeasureSpec(contentHeight, MeasureSpec.EXACTLY));
+		view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+	}
+	
+	public void updateView(View view) {
+		contentSubstitutionView.updateView(view == null ? contentContainer : view);
 	}
 }
