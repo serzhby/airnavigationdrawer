@@ -49,27 +49,27 @@ public class AirNavigationDrawer extends ViewGroup {
 	private int previousX;
 	private int previousY;
 	private boolean isTouchMove = false;
-    private VelocityTracker velocityTracker;
-    
-    @SuppressWarnings("unused")
+	private VelocityTracker velocityTracker;
+	
+	@SuppressWarnings("unused")
 	private int minimumVelocity;
-    private int maximumVelocity;
-    private int maximumFlingVelocity;
-    private int minimumFlingVelocity;
-    
-    private boolean isAnimationWorking = false;
+	private int maximumVelocity;
+	private int maximumFlingVelocity;
+	private int minimumFlingVelocity;
+	
+	private boolean isAnimationWorking = false;
 	private boolean intercept = false;
-    
-    private TouchMode touchMode = TouchMode.NONE;
-    
-    private OnMenuShownListener onMenuShownListener;
-    private OnMenuClosedListener onMenuClosedListener;
-    
-    private List<OpeningPercentListener> openingPercentListeners = new ArrayList<OpeningPercentListener>();
+	
+	private TouchMode touchMode = TouchMode.NONE;
+	
+	private OnMenuShownListener onMenuShownListener;
+	private OnMenuClosedListener onMenuClosedListener;
+	
+	private List<OpeningPercentListener> openingPercentListeners = new ArrayList<OpeningPercentListener>();
 
 	private FrameLayout contentRootContainer;
 	private ContentSubstitutionView contentSubstitutionView;
-    
+	
 	public AirNavigationDrawer(Context context) {
 		this(context, null);
 	}
@@ -117,24 +117,24 @@ public class AirNavigationDrawer extends ViewGroup {
 	
 	private void initializeVelocityConstants(Context context) {
 		final ViewConfiguration configuration = ViewConfiguration.get(context);
-        minimumVelocity = configuration.getScaledMinimumFlingVelocity();
-        maximumVelocity = configuration.getScaledMaximumFlingVelocity();
-        maximumFlingVelocity = configuration.getScaledMaximumFlingVelocity();
-        minimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
+		minimumVelocity = configuration.getScaledMinimumFlingVelocity();
+		maximumVelocity = configuration.getScaledMaximumFlingVelocity();
+		maximumFlingVelocity = configuration.getScaledMaximumFlingVelocity();
+		minimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
 	}
 
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-	    int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-	    int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+		int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+		int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-	    visibleHeight = heightSize;
-	    visibleWidth = widthSize;
-	    
-	    menuWidth = visibleWidth - MENU_RIGHT_MARGIN;
-	    menuHeight = visibleHeight;
-	    int menuWidthMeasureSpec = MeasureSpec.makeMeasureSpec(menuWidth, MeasureSpec.EXACTLY);
-	    int menuHeightMeasureSpec = MeasureSpec.makeMeasureSpec(menuHeight, MeasureSpec.EXACTLY);
+		visibleHeight = heightSize;
+		visibleWidth = widthSize;
+		
+		menuWidth = visibleWidth - MENU_RIGHT_MARGIN;
+		menuHeight = visibleHeight;
+		int menuWidthMeasureSpec = MeasureSpec.makeMeasureSpec(menuWidth, MeasureSpec.EXACTLY);
+		int menuHeightMeasureSpec = MeasureSpec.makeMeasureSpec(menuHeight, MeasureSpec.EXACTLY);
 		getChildAt(0).measure(menuWidthMeasureSpec, menuHeightMeasureSpec);
 		
 		contentWidth = visibleWidth;
@@ -143,7 +143,7 @@ public class AirNavigationDrawer extends ViewGroup {
 		int contentHeightMeasureSpec = MeasureSpec.makeMeasureSpec(contentHeight, MeasureSpec.EXACTLY);
 		getChildAt(1).measure(contentWidthMeasureSpec, contentHeightMeasureSpec);
 		
-	    viewWidth = menuWidth + contentWidth;
+		viewWidth = menuWidth + contentWidth;
 		setMeasuredDimension(resolveSize(viewWidth, widthMeasureSpec), resolveSize(visibleHeight, heightMeasureSpec));
 	}
 	
@@ -155,44 +155,44 @@ public class AirNavigationDrawer extends ViewGroup {
 	
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
-        boolean result = false;
+		boolean result = false;
 		if(!isAnimationWorking) {
-	        final int action = ev.getAction();
-	        int y = (int) ev.getY();
-	        int x = (int) ev.getX();
+			final int action = ev.getAction();
+			int y = (int) ev.getY();
+			int x = (int) ev.getX();
 
-	        switch (action & MotionEvent.ACTION_MASK) {
+			switch (action & MotionEvent.ACTION_MASK) {
 				case MotionEvent.ACTION_DOWN: {
-	            	initOrResetVelocityTracker();
-			        previousX = x;
-			        previousY = y;
-			        if((isMenuShown() && x > menuWidth)
-			        		|| (touchMode == TouchMode.MARGIN && x > 0 && x < LEFT_TOUCH_ZONE_WIDTH && y > topPaddingHeight)) {
-			        	result = true;
-			        }
-			        break;
-			    }
+					initOrResetVelocityTracker();
+					previousX = x;
+					previousY = y;
+					if((isMenuShown() && x > menuWidth)
+							|| (touchMode == TouchMode.MARGIN && x > 0 && x < LEFT_TOUCH_ZONE_WIDTH && y > topPaddingHeight)) {
+						result = true;
+					}
+					break;
+				}
 				case MotionEvent.ACTION_MOVE: {
-	            	int deltaY = (int) previousY - y;
-	            	int deltaX = (int) previousX - x;
-	            	int delta = INTERCEPT_DELTA; 
-	        		if(Math.abs(deltaX) > delta || Math.abs(deltaY) > delta) {
-	            		if(Math.abs(deltaY) < Math.abs(deltaX) &&
-	            				( (touchMode == TouchMode.MARGIN && previousX > 0 && previousX < LEFT_TOUCH_ZONE_WIDTH)
-	            					|| (touchMode == TouchMode.FULLSCREEN)
-	            					|| isMenuShown()) ) {
-	            			result = true;
-	            		}
-	        		}
-	                previousX = x;
-	                previousY = y;
-	                break;
-	            }
+					int deltaY = (int) previousY - y;
+					int deltaX = (int) previousX - x;
+					int delta = INTERCEPT_DELTA; 
+					if(Math.abs(deltaX) > delta || Math.abs(deltaY) > delta) {
+						if(Math.abs(deltaY) < Math.abs(deltaX) &&
+								( (touchMode == TouchMode.MARGIN && previousX > 0 && previousX < LEFT_TOUCH_ZONE_WIDTH)
+									|| (touchMode == TouchMode.FULLSCREEN)
+									|| isMenuShown()) ) {
+							result = true;
+						}
+					}
+					previousX = x;
+					previousY = y;
+					break;
+				}
 				case MotionEvent.ACTION_CANCEL:
 				case MotionEvent.ACTION_UP: {
 					break;
 				}
-	        }
+			}
 		}
 		intercept = result;
 		return result;
@@ -200,44 +200,44 @@ public class AirNavigationDrawer extends ViewGroup {
 	
 	@SuppressLint("ClickableViewAccessibility")
 	@Override
-    public boolean onTouchEvent(MotionEvent ev) {
+	public boolean onTouchEvent(MotionEvent ev) {
 		if(!intercept) {
 			return false;
 		}
-        final int action = ev.getAction();
-        int y = (int) ev.getY();
-        int x = (int) ev.getX();
-        
-        if(velocityTracker != null) {
-        	velocityTracker.addMovement(ev);
-        }
+		final int action = ev.getAction();
+		int y = (int) ev.getY();
+		int x = (int) ev.getX();
+		
+		if(velocityTracker != null) {
+			velocityTracker.addMovement(ev);
+		}
 
-        switch (action & MotionEvent.ACTION_MASK) {
-        	case MotionEvent.ACTION_DOWN:
-            	initOrResetVelocityTracker();
-        		break;
-            case MotionEvent.ACTION_MOVE: {
-            	isTouchMove = true;
-            	int deltaX = (int) previousX - x;
-            	
-            	if(getScrollX() + deltaX < 0) {
-            		scrollTo(0, 0);
-            	} else if(getScrollX() + deltaX + visibleWidth > viewWidth) {
-            		scrollTo(menuWidth, 0);
-            	} else {
-            		scrollBy(deltaX, 0);
-            	}
-            	updateContentSubstitutionViewAngle();
-            	updateMenuSubstitutionViewAngle();
-            	notifyListeners();
-                previousX = x;
-                previousY = y;
-                break;
-            }
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP: {
-            	if(velocityTracker != null) {
-	            	if(isTouchMove) {
+		switch (action & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				initOrResetVelocityTracker();
+				break;
+			case MotionEvent.ACTION_MOVE: {
+				isTouchMove = true;
+				int deltaX = (int) previousX - x;
+				
+				if(getScrollX() + deltaX < 0) {
+					scrollTo(0, 0);
+				} else if(getScrollX() + deltaX + visibleWidth > viewWidth) {
+					scrollTo(menuWidth, 0);
+				} else {
+					scrollBy(deltaX, 0);
+				}
+				updateContentSubstitutionViewAngle();
+				updateMenuSubstitutionViewAngle();
+				notifyListeners();
+				previousX = x;
+				previousY = y;
+				break;
+			}
+			case MotionEvent.ACTION_CANCEL:
+			case MotionEvent.ACTION_UP: {
+				if(velocityTracker != null) {
+					if(isTouchMove) {
 						velocityTracker.computeCurrentVelocity(1000, maximumVelocity);
 						int initialVelocity = (int) velocityTracker.getXVelocity(ev.getPointerId(ev.getActionIndex()));
 
@@ -251,34 +251,34 @@ public class AirNavigationDrawer extends ViewGroup {
 						} else {
 							onTouchFinished();
 						}
-	            	} else if(isMenuShown()) {
-	            		animateTo(menuWidth);
-	            	}
-            	} else {
-            		animateTo(menuWidth);
-            	}
-            	isTouchMove = false;
-            	recycleVelocityTracker();
-            	break;
-        	}
-        }
-        return true;
-    }
+					} else if(isMenuShown()) {
+						animateTo(menuWidth);
+					}
+				} else {
+					animateTo(menuWidth);
+				}
+				isTouchMove = false;
+				recycleVelocityTracker();
+				break;
+			}
+		}
+		return true;
+	}
 
-    private void initOrResetVelocityTracker() {
-        if (velocityTracker == null) {
-            velocityTracker = VelocityTracker.obtain();
-        } else {
-            velocityTracker.clear();
-        }
-    }
-    
-    private void recycleVelocityTracker() {
-    	if(velocityTracker != null) {
-        	velocityTracker.recycle();
-        	velocityTracker = null;
-    	}
-    }
+	private void initOrResetVelocityTracker() {
+		if (velocityTracker == null) {
+			velocityTracker = VelocityTracker.obtain();
+		} else {
+			velocityTracker.clear();
+		}
+	}
+	
+	private void recycleVelocityTracker() {
+		if(velocityTracker != null) {
+			velocityTracker.recycle();
+			velocityTracker = null;
+		}
+	}
 	
 	private void onTouchFinished() {
 		int scrollX = getScrollX();
@@ -325,7 +325,7 @@ public class AirNavigationDrawer extends ViewGroup {
 					updateContentSubstitutionViewAngle();
 					updateMenuSubstitutionViewAngle();
 					notifyListeners();
-			    	onTransitionFinished();
+					onTransitionFinished();
 					isAnimationWorking = false;
 				}
 				
